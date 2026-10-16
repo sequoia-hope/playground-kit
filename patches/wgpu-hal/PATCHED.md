@@ -38,3 +38,9 @@ note. Worth reporting upstream.
 
 Also `#![allow(warnings)]` at the top of `src/lib.rs`: Cargo caps the
 lints of a crates.io dependency but not of a path one.
+
+2026-10-16: two binds the cache did not track, found while splitting the
+patch for upstream (docs/upstream/wgpu-hal-gles-bind-cache.md): the
+`perform_shader_clear` workaround's `use_program` now updates the program
+cache, and `C::ClearBuffer` on an index buffer restores
+`ELEMENT_ARRAY_BUFFER` to `current_index_buffer`.

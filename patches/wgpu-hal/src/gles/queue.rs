@@ -58,6 +58,8 @@ impl super::Queue {
             .as_ref()
             .expect("shader_clear_program should always be set if the workaround is enabled");
         unsafe { gl.use_program(Some(shader_clear.program)) };
+        // The clear program is now current; the next `SetProgram` must bind again.
+        self.bind_cache.lock().program = Some(shader_clear.program);
         unsafe {
             gl.uniform_4_f32(
                 Some(&shader_clear.color_uniform_location),
@@ -375,6 +377,10 @@ impl super::Queue {
                         unsafe {
                             gl.buffer_sub_data_u8_slice(dst_target, range.start as i32, &zeroes)
                         };
+                    }
+                    if dst_target == glow::ELEMENT_ARRAY_BUFFER {
+                        // The clear left this buffer bound as the index buffer.
+                        *self.current_index_buffer.lock() = Some(buffer);
                     }
                 }
                 None => {
