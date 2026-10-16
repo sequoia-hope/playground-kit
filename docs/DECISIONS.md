@@ -224,3 +224,76 @@ JSON-lines log, one per race, a second download on the web; snapshots are
 hand-written bytes now and serde behind a feature in phase 3; snowboarding
 quantises its input (`i8` axes, a flag byte) when it adopts the seam.
 Phase 2 wires Midnight's `mp_sim` and `play/session.rs` onto the trait.
+
+## D8 (2026-10-16). pk_shell
+
+The Bevy client shell (PLAN.md section 4, layer 1), carved from Midnight
+Playground's `mp_game` module by module (its D1234 is the other side):
+`plugins`, `bridge`, `options` → `params`, `status`, `ui/store` → `store`,
+`native` + `native/window_state`, `web` + the generic halves of `ui/web`
+and `play/web`, `warmup`, `debug_overlay` → `debug`, `recording` →
+`recorder`, `worker`, `stations`, and `Inbox`/`AppInfo` from `lib.rs`.
+Each module's doc names the game decision it came from and keeps the
+comments with the measured numbers. No game names in the crate: a
+`grep -i` for car, level, race, Midnight and `mr.` finds only the
+attributions to Midnight Playground's decisions.
+
+- **Seams are configuration or small hooks, not traits**, because every
+  game-specific thing here was data: the global's name and aliases
+  (`WebPlugin { global, aliases }`), the flag table (`params::Aliases`),
+  the store's prefix, folder, env var and legacy folders (`StoreConfig`),
+  the window's name, id, icon, sizes and state file (`WindowConfig`), the
+  warm-up's material key type (`Combos<M, K>`) with an `extra` closure
+  per stand-in, the overlay's toggle key and font and the game's lines
+  (`DebugLines`), the recorder's start fields and lines (`RecordLine`,
+  `RecorderMode`, `InputLog<I>` over the game's encoder), the readiness
+  blockers (`ReadyBlockers`, `late_is_expected_while`), the tap-sensitive
+  controls (`FullscreenOnTap`, `PermissionOnTap`, `TapPolicy`, the
+  permission hook), the stage commands (`register_stage`), the stations'
+  pose and settled callbacks, the worker's script.
+- **The status global is `__game` with aliases that are the same
+  object.** `bridge::install` finds the first name the page made, sets the
+  others to it, and every tool reads one object under any name. Midnight
+  aliases `__mp` for its suites. The contract's fields (`state`,
+  `frames`, `ready`, `backend`, `error`, `shot`; `wasmMemoryBytes` and
+  `stage` are the page's) are in `bridge`'s doc; `web::publish_status`
+  writes them each frame.
+- **`LoadState` is an enum**, not the contract's string; `name()` gives
+  the string. `ready` is decided as Midnight's D390 decided it: ten scene
+  frames, no render pipeline waiting, no blocker busy, a GPU fence.
+- **The backend is a cargo feature** (`webgpu`, `webgl2`), neither on by
+  default: a game's wasm target tables turn one on beside Bevy's own, so a
+  game's cfg (`mp_webgl2`, `pk_webgl2` in the template) stays the game's
+  and the kit never reads a cfg. `backend()` and `platform()` answer from
+  the feature.
+- **`FocusLost`/`FocusGained`** are one message type for both platforms
+  (`FocusPlugin`): the window's focus natively, `visibilitychange` on the
+  web, written in `PreUpdate` so a game pauses before its ticks.
+- **The pixel ratio** is `RenderScale { hq, hq_cap: 1.5, scale,
+  screen_min: 2 }` (D437, D1194, D575) applied by `set_pixel_ratio`
+  (D1195); `PixelRatioPolicy { on, screen_up }` drives the split-screen
+  camera (D1199) only for a game that turns it on, so a game with no
+  screens over its scene (or Midnight's fly-camera pages) draws exactly
+  as before.
+- **`InputLog<I>` takes the game's encoder** rather than requiring
+  `Serialize`: Midnight's `ticks` lines must stay byte-identical for
+  `mp-sim replay`, and its encoding is its own. The `.pkrec` converter of
+  D6 is still a later step.
+- **`serde_json` with `preserve_order`**, as the games have it: the
+  window-state file and the recorder's lines keep their field order.
+- **The debug overlay's font** is a parameter, Bevy's bundled Fira Mono
+  (OFL, the `default_font` feature) when none is given; no font is
+  bundled by the kit.
+- **The smoke test's extra line and the title line are closures** over
+  the world (`SmokeTest::extra`, `StatusTitle`), because what they print
+  (a scene's counts, a route position) is the game's.
+- **Not generic, left in Midnight**: its `Options` struct and `usage`; the
+  scene thread and Seaside's survey; the `__mp` publishing of `level`,
+  `hq`, `scale`, `s`, the route and the counts; the stage handlers'
+  bodies (they need `pk_ui`, phase 2); `ui/mod.rs`'s hit test (it now
+  calls `pk_shell::ui::css_rect`/`css_shown`); the recorder's race lines.
+- **Gates**: `cargo fmt --all --check`, `cargo clippy -p pk_shell
+  --all-targets -- -D warnings`, the same for `wasm32-unknown-unknown`
+  with `--features webgpu` and `--features webgl2`, `cargo test -p
+  pk_shell` (25 tests), `cargo xtask check-deps`; and Midnight green on
+  its own gates with the carve (its D1234).

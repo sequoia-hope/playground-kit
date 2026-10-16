@@ -17,8 +17,15 @@ would otherwise copy. The split is judged by three gates:
 1. **Midnight Playground is unchanged to the player.** Every test it has
    today still passes, `cargo xtask check-deps` still passes, and the
    web build is pixel-identical to the pre-split build on the four levels
-   `build-diff.mjs` checks (`dist/prof` as the before). Frame time on the
-   reference phones is within noise.
+   `build-diff.mjs` checks (`dist/pre-split`, built from f9ca805, as the
+   before). Coast has a known noise floor: its sea glitter is animated by
+   the sea clock, so one build against itself across two Chrome runs
+   differs by about 70 to 180 scattered pixels at a channel difference of
+   1; a diff inside that floor on coast is not a change (phase 1 measured
+   pre-split against itself at 118 pixels, the carve at 73 to 128). A
+   later tooling step should let the harness freeze the sea clock so the
+   gate is exact on coast too. Frame time on the reference phones is
+   within noise.
 2. **Snowboarding deletes code.** Its options, status, web glue, xtask
    web build, loader page, serve.py and audio shrink to calls into the
    library, and it gains what it lacks: settings persistence, window
