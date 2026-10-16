@@ -211,3 +211,16 @@ read in.
   `CLAUDE.md` and `DECISIONS.md` stubs. The client crate itself is not in
   the template yet: it waits for `pk_shell` (the README says what the
   crate must export for the page).
+
+## D7 (2026-10-16). The Simulation seam's defaults stand
+
+The owner read `docs/design/simulation.md` and accepted its six defaults
+(Q1 to Q6): the netcode carries an opaque lobby payload and a game-supplied
+`start`, added to `NetSim` in phase 3; one `NetSim` trait with `accept`
+defaulting to the identity; `predict` strips every edge flag, including
+the gear shifts (a behaviour change for sim cars online, to be recorded in
+Midnight's DECISIONS when wired); recordings are `.pkrec` beside the
+JSON-lines log, one per race, a second download on the web; snapshots are
+hand-written bytes now and serde behind a feature in phase 3; snowboarding
+quantises its input (`i8` axes, a flag byte) when it adopts the seam.
+Phase 2 wires Midnight's `mp_sim` and `play/session.rs` onto the trait.
