@@ -297,3 +297,29 @@ attributions to Midnight Playground's decisions.
   with `--features webgpu` and `--features webgl2`, `cargo test -p
   pk_shell` (25 tests), `cargo xtask check-deps`; and Midnight green on
   its own gates with the carve (its D1234).
+
+## D9 (2026-10-18). wgpu destroys what is dropped; the kit carries wgpu 30 too
+
+Snowboarding's investigation of an iPhone tab kill (its own falling snow,
+a mesh rebuilt every frame) found that on WebGPU wgpu never destroys a
+dropped buffer or texture: `Drop for WebBuffer` and `Drop for WebTexture`
+are no-ops upstream (gfx-rs/wgpu#4092, closed 2024), so their GPU memory
+waits for the JS garbage collector, and Bevy re-makes buffers every frame.
+
+- **`patches/wgpu` gains change 2, destroy on drop** (its PATCHED.md):
+  a shared `Life` per buffer or texture destroys it when the last holder
+  goes, and views, bind groups, encoders, passes, bundles and unsubmitted
+  command buffers hold the `Life` of what they use, as wgpu-core does
+  natively. Canvas textures are never destroyed. Measured: no cost on
+  Midnight's Sierra race (mean CPU 2.74 to 2.58 ms a frame, 5th-percentile
+  fps about 200 to about 300), no validation errors in Snowboarding's
+  and Midnight's browser runs, Snowboarding's 8,076 undestroyed buffers a
+  minute now all destroyed but 69.
+- **`patches/wgpu-30`**: the same change on wgpu 30.0.1 for Bevy 0.20
+  projects (`render`). A `[patch.crates-io]` must stay in the crate's
+  semver range, so one wgpu for every game means one Bevy; until then the
+  kit carries both.
+- **Snowboarding points at the kit's patches** and deleted its copies, as
+  D2 asked; its wgpu-hal was the copy without the 2026-10-16 bind-cache
+  fixes.
+- Upstream: `docs/upstream/wgpu-webgpu-destroy-on-drop.md`, not posted.

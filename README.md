@@ -19,7 +19,7 @@ Crates are `pk_*`. The games depend on them by sibling path
 | `docs/DECISIONS.md` | every choice the plan did not cover, numbered |
 | `docs/design/` | one note per seam, written before its phase |
 | `crates/` | the library |
-| `patches/` | wgpu, wgpu-hal and bevy_ui_render as the games patch them, until upstream lands |
+| `patches/` | wgpu (29 for Bevy 0.19, `wgpu-30` for 0.20), wgpu-hal and bevy_ui_render as the games patch them, until upstream lands |
 | `template/` | a new game's skeleton: xtask, loader page, server, CI |
 | `js/` | headless-Chrome tools: perf, profile by Bevy system, GL calls, build diff, shots |
 | `tools/` | the atlas, voice and signalling-relay pipelines |
